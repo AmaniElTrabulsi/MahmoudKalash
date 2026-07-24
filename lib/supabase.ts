@@ -8,15 +8,25 @@ const supabaseAnonKey =
 
 if (!supabaseUrl) {
   throw new Error(
-    "Missing NEXT_PUBLIC_SUPABASE_URL"
+    "NEXT_PUBLIC_SUPABASE_URL is missing"
   );
 }
 
 if (!supabaseAnonKey) {
   throw new Error(
-    "Missing NEXT_PUBLIC_SUPABASE_ANON_KEY"
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY is missing"
   );
 }
+
+console.log(
+  "Supabase URL:",
+  supabaseUrl
+);
+
+console.log(
+  "Supabase key exists:",
+  !!supabaseAnonKey
+);
 
 export const supabase =
   createClient(
