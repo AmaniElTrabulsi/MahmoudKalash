@@ -98,7 +98,7 @@ export default function EditPatientPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#080808] text-white p-4 sm:p-6 pt-24">
+    <main className="min-h-screen bg-[#080808] text-white p-4 sm:p-6 pt-32">
       <DashboardMenu />
 
       <div className="max-w-5xl mx-auto">

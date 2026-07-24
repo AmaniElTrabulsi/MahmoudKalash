@@ -225,7 +225,7 @@ export default function PrescriptionDetailsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#080808] text-white p-6 pt-24">
+    <main className="min-h-screen bg-[#080808] text-white p-6 pt-32">
 
       <DashboardMenu />
 

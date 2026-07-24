@@ -49,7 +49,7 @@ export default function NewIncomePage() {
       bg-[#080808]
       text-white
       p-6
-      pt-24
+      pt-32
       "
     >
 

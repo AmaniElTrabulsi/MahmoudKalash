@@ -275,7 +275,7 @@ export default function PatientDetailsPage() {
       text-white
       p-4
       sm:p-6
-      pt-24
+      pt-32
     ">
 
       <DashboardMenu />

@@ -406,7 +406,7 @@ export default function NewReminderPage() {
 
         p-6
 
-        pt-24
+        pt-32
 
       "
 
