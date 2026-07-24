@@ -9,89 +9,194 @@ export default function LoginPage() {
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
   async function login() {
     setMessage("");
 
-    if (!username || !password) {
-      setMessage("Please enter username and password");
+    if (!username.trim() || !password) {
+      setMessage(
+        "Please enter username and password"
+      );
+
       return;
     }
 
     setLoading(true);
 
-    const { data, error } = await supabase.rpc(
-      "check_user_password",
-      {
-        input_username: username.trim(),
-        input_password: password,
+    try {
+      const {
+        data,
+        error,
+      } = await supabase.rpc(
+        "check_user_password",
+        {
+          input_username:
+            username.trim(),
+
+          input_password:
+            password,
+        }
+      );
+
+      console.log(
+        "LOGIN DATA:",
+        data
+      );
+
+      console.log(
+        "LOGIN ERROR:",
+        error
+      );
+
+      if (error) {
+        console.error(
+          "LOGIN DATABASE ERROR:",
+          error
+        );
+
+        setMessage(
+          `Error: ${
+            error.message
+          }`
+        );
+
+        return;
       }
-    );
 
-    console.log("RPC DATA:", data);
-    console.log("RPC ERROR:", error);
+      if (!data) {
+        setMessage(
+          "Invalid username or password"
+        );
 
-    if (error) {
-      console.error("LOGIN DATABASE ERROR:", error);
+        return;
+      }
+
+      localStorage.setItem(
+        "doctor_user",
+        JSON.stringify(data)
+      );
+
+      router.push(
+        "/dashboard"
+      );
+
+    } catch (error: any) {
+      console.error(
+        "NETWORK ERROR:",
+        error
+      );
 
       setMessage(
-        `${error.message} ${
-          error.code
-            ? `(Code: ${error.code})`
-            : ""
+        `Network error: ${
+          error?.message ||
+          "Load failed"
         }`
       );
 
+    } finally {
       setLoading(false);
-      return;
     }
-
-    if (!data) {
-      setMessage("Invalid username or password");
-      setLoading(false);
-      return;
-    }
-
-    localStorage.setItem(
-      "doctor_user",
-      JSON.stringify(data)
-    );
-
-    router.push("/dashboard");
   }
 
   return (
-    <main className="min-h-screen bg-[#080808] text-white flex items-center justify-center px-4">
+    <main
+      className="
+        min-h-screen
+        bg-[#080808]
+        text-white
+        flex
+        items-center
+        justify-center
+        px-4
+      "
+    >
 
-      <div className="w-full max-w-md bg-[#171717] border border-[#BFA15F]/30 rounded-2xl p-8">
+      <div
+        className="
+          w-full
+          max-w-md
+          bg-[#171717]
+          border
+          border-[#BFA15F]/30
+          rounded-2xl
+          p-8
+        "
+      >
 
-        <h1 className="text-3xl text-center font-bold text-[#BFA15F] mb-8">
+        <h1
+          className="
+            text-3xl
+            text-center
+            font-bold
+            text-[#BFA15F]
+            mb-8
+          "
+        >
           Dr. Mahmoud Kalash
         </h1>
 
         <input
-          className="w-full h-14 bg-black border border-[#BFA15F]/30 rounded-xl px-4 mb-4 outline-none"
+          className="
+            w-full
+            h-14
+            bg-black
+            border
+            border-[#BFA15F]/30
+            rounded-xl
+            px-4
+            mb-4
+            outline-none
+            focus:border-[#BFA15F]
+          "
           placeholder="Username"
           value={username}
           onChange={(e) =>
-            setUsername(e.target.value)
+            setUsername(
+              e.target.value
+            )
           }
         />
 
         <input
           type="password"
-          className="w-full h-14 bg-black border border-[#BFA15F]/30 rounded-xl px-4 mb-4 outline-none"
+          className="
+            w-full
+            h-14
+            bg-black
+            border
+            border-[#BFA15F]/30
+            rounded-xl
+            px-4
+            mb-4
+            outline-none
+            focus:border-[#BFA15F]
+          "
           placeholder="Password"
           value={password}
           onChange={(e) =>
-            setPassword(e.target.value)
+            setPassword(
+              e.target.value
+            )
           }
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              login();
+            }
+          }}
         />
 
         {message && (
-          <p className="text-red-400 text-center mb-4 break-words">
+          <p
+            className="
+              text-red-400
+              text-center
+              mb-4
+              break-words
+            "
+          >
             {message}
           </p>
         )}
@@ -99,9 +204,19 @@ export default function LoginPage() {
         <button
           onClick={login}
           disabled={loading}
-          className="w-full h-14 bg-[#BFA15F] text-black rounded-xl font-bold disabled:opacity-50"
+          className="
+            w-full
+            h-14
+            bg-[#BFA15F]
+            text-black
+            rounded-xl
+            font-bold
+            disabled:opacity-50
+          "
         >
-          {loading ? "Checking..." : "Login"}
+          {loading
+            ? "Checking..."
+            : "Login"}
         </button>
 
       </div>
