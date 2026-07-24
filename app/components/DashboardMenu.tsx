@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 
 export default function DashboardMenu() {
   const router = useRouter();
+
   const [open, setOpen] = useState(false);
 
   const links = [
@@ -39,114 +40,153 @@ export default function DashboardMenu() {
     },
   ];
 
+  function logout() {
+    // Remove logged-in user
+    localStorage.removeItem("doctor_user");
+
+    // Close menu
+    setOpen(false);
+
+    // Go to login
+    router.replace("/login");
+  }
+
   return (
     <>
+
       {/* TOP BAR */}
 
       <div
         className="
-        fixed
-        top-0
-        left-0
-        right-0
-        h-16
-        bg-[#080808]
-        border-b
-        border-[#BFA15F]/20
-        z-40
-        flex
-        items-center
-        px-4
+          fixed
+          top-0
+          left-0
+          right-0
+          h-16
+          bg-[#080808]
+          border-b
+          border-[#BFA15F]/20
+          z-40
+          flex
+          items-center
+          px-4
         "
       >
+
         <button
           onClick={() => setOpen(true)}
           className="
-          bg-[#171717]
-          border
-          border-[#BFA15F]/40
-          rounded-xl
-          w-12
-          h-12
-          text-2xl
+            bg-[#171717]
+            border
+            border-[#BFA15F]/40
+            rounded-xl
+            w-12
+            h-12
+            text-2xl
           "
         >
           ☰
         </button>
 
+
         <h1
           className="
-          ml-4
-          text-lg
-          font-bold
-          text-[#BFA15F]
+            ml-4
+            text-lg
+            font-bold
+            text-[#BFA15F]
           "
         >
           Dr. Mahmoud Kalash
         </h1>
+
       </div>
+
 
       {/* OVERLAY */}
 
       {open && (
+
         <div
           className="
-          fixed
-          inset-0
-          bg-black/70
-          z-40
+            fixed
+            inset-0
+            bg-black/70
+            z-40
           "
           onClick={() => setOpen(false)}
         />
+
       )}
+
 
       {/* SIDE MENU */}
 
       <div
         className={`
-        fixed
-        top-0
-        left-0
-        h-full
-        w-72
-        bg-[#171717]
-        border-r
-        border-[#BFA15F]/30
-        z-50
-        p-6
-        transition-transform
-        duration-300
-        ${
-          open
-            ? "translate-x-0"
-            : "-translate-x-full"
-        }
+          fixed
+          top-0
+          left-0
+          h-full
+          w-72
+          bg-[#171717]
+          border-r
+          border-[#BFA15F]/30
+          z-50
+          p-6
+          transition-transform
+          duration-300
+          flex
+          flex-col
+          ${
+            open
+              ? "translate-x-0"
+              : "-translate-x-full"
+          }
         `}
       >
-        <div className="flex justify-between items-center mb-8">
+
+        {/* MENU HEADER */}
+
+        <div
+          className="
+            flex
+            justify-between
+            items-center
+            mb-8
+          "
+        >
+
           <h1
             className="
-            text-2xl
-            font-bold
-            text-[#BFA15F]
+              text-2xl
+              font-bold
+              text-[#BFA15F]
             "
           >
             Dr. Mahmoud Kalash
           </h1>
 
+
           <button
             onClick={() => setOpen(false)}
             className="
-            text-gray-400
-            text-2xl
+              text-gray-400
+              text-2xl
             "
           >
             ×
           </button>
+
         </div>
 
+
+        {/* NAVIGATION */}
+
         <div className="space-y-3">
+
           {links.map((item) => (
+
             <button
               key={item.path}
               onClick={() => {
@@ -154,25 +194,57 @@ export default function DashboardMenu() {
                 setOpen(false);
               }}
               className="
-              w-full
-              text-left
-              px-4
-              py-3
-              rounded-xl
-              bg-black
-              border
-              border-[#BFA15F]/20
-              text-white
-              hover:border-[#BFA15F]
-              hover:text-[#BFA15F]
-              transition
+                w-full
+                text-left
+                px-4
+                py-3
+                rounded-xl
+                bg-black
+                border
+                border-[#BFA15F]/20
+                text-white
+                hover:border-[#BFA15F]
+                hover:text-[#BFA15F]
+                transition
               "
             >
               {item.name}
             </button>
+
           ))}
+
         </div>
+
+
+        {/* LOGOUT AT BOTTOM */}
+
+        <div className="mt-auto pt-6">
+
+          <button
+            onClick={logout}
+            className="
+              w-full
+              px-4
+              py-3
+              rounded-xl
+              bg-red-900/30
+              border
+              border-red-500/40
+              text-red-300
+              font-bold
+              hover:bg-red-900/50
+              hover:border-red-400
+              transition
+            "
+          >
+            🚪 Logout
+          </button>
+
+        </div>
+
       </div>
+
     </>
+
   );
 }
