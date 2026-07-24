@@ -1,23 +1,34 @@
 "use client";
 
-import { useState } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { Suspense, useState } from "react";
+import {
+  useSearchParams,
+  useRouter,
+} from "next/navigation";
+
 import { supabase } from "@/lib/supabase";
 import DashboardMenu from "@/app/components/DashboardMenu";
 
 const DOCUMENTS_BUCKET = "documents";
 
-export default function NewDocumentPage() {
+function NewDocumentContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  const patient_id = searchParams.get("patient_id");
-  const visit_id = searchParams.get("visit_id");
+  const patient_id =
+    searchParams.get("patient_id");
 
-  const [file, setFile] = useState<File | null>(null);
-  const [description, setDescription] = useState("");
+  const visit_id =
+    searchParams.get("visit_id");
 
-  const [saving, setSaving] = useState(false);
+  const [file, setFile] =
+    useState<File | null>(null);
+
+  const [description, setDescription] =
+    useState("");
+
+  const [saving, setSaving] =
+    useState(false);
 
   async function uploadDocument() {
     if (!patient_id) {
@@ -33,12 +44,6 @@ export default function NewDocumentPage() {
     setSaving(true);
 
     try {
-      /*
-      =====================================
-      CREATE UNIQUE FILE NAME
-      =====================================
-      */
-
       const fileExtension =
         file.name.split(".").pop() || "file";
 
@@ -48,7 +53,8 @@ export default function NewDocumentPage() {
         typeof crypto !== "undefined" &&
         typeof crypto.randomUUID === "function"
       ) {
-        uniqueId = crypto.randomUUID();
+        uniqueId =
+          crypto.randomUUID();
       } else {
         uniqueId =
           Date.now().toString() +
@@ -61,15 +67,14 @@ export default function NewDocumentPage() {
       const filePath =
         `${patient_id}/${uniqueId}.${fileExtension}`;
 
-
       /*
-      =====================================
-      UPLOAD FILE TO STORAGE
-      =====================================
+      ================================
+      UPLOAD FILE TO SUPABASE STORAGE
+      ================================
       */
 
       const {
-        error: uploadError
+        error: uploadError,
       } = await supabase.storage
         .from(DOCUMENTS_BUCKET)
         .upload(
@@ -77,13 +82,11 @@ export default function NewDocumentPage() {
           file,
           {
             cacheControl: "3600",
-            upsert: false
+            upsert: false,
           }
         );
 
-
       if (uploadError) {
-
         console.error(
           "STORAGE UPLOAD ERROR:",
           uploadError
@@ -94,61 +97,54 @@ export default function NewDocumentPage() {
           uploadError.message
         );
 
-        setSaving(false);
-
         return;
       }
 
-
       /*
-      =====================================
+      ================================
       GET PUBLIC FILE URL
-      =====================================
+      ================================
       */
 
       const {
-        data: publicUrlData
+        data: publicUrlData,
       } = supabase.storage
         .from(DOCUMENTS_BUCKET)
         .getPublicUrl(filePath);
 
-
       const file_url =
         publicUrlData.publicUrl;
 
-
       /*
-      =====================================
-      SAVE RECORD TO DOCUMENTS TABLE
-      =====================================
+      ================================
+      SAVE DOCUMENT RECORD
+      ================================
       */
 
       const {
-        error: databaseError
+        error: databaseError,
       } = await supabase
         .from("documents")
         .insert({
-
           patient_id: patient_id,
 
           visit_id:
             visit_id || null,
 
-          file_name: file.name,
+          file_name:
+            file.name,
 
-          file_url: file_url,
+          file_url:
+            file_url,
 
           file_type:
             file.type || null,
 
           description:
-            description || null
-
+            description.trim() || null,
         });
 
-
       if (databaseError) {
-
         console.error(
           "DATABASE INSERT ERROR:",
           databaseError
@@ -159,29 +155,18 @@ export default function NewDocumentPage() {
           databaseError.message
         );
 
-        setSaving(false);
-
         return;
       }
-
-
-      /*
-      =====================================
-      SUCCESS
-      =====================================
-      */
 
       alert(
         "Document uploaded successfully"
       );
-
 
       router.push(
         `/dashboard/patients/${patient_id}`
       );
 
     } catch (error: any) {
-
       console.error(
         "GENERAL ERROR:",
         error
@@ -189,19 +174,16 @@ export default function NewDocumentPage() {
 
       alert(
         "GENERAL ERROR:\n\n" +
-        error.message
+        (error?.message ||
+          "Something went wrong")
       );
 
     } finally {
-
       setSaving(false);
-
     }
   }
 
-
   return (
-
     <main
       className="
         min-h-screen
@@ -211,9 +193,7 @@ export default function NewDocumentPage() {
         pt-24
       "
     >
-
       <DashboardMenu />
-
 
       <div
         className="
@@ -221,24 +201,26 @@ export default function NewDocumentPage() {
           mx-auto
         "
       >
-
-
         <button
-          onClick={() =>
-            router.push(
-              `/dashboard/patients/${patient_id}`
-            )
-          }
+          onClick={() => {
+            if (patient_id) {
+              router.push(
+                `/dashboard/patients/${patient_id}`
+              );
+            } else {
+              router.push(
+                "/dashboard/patients"
+              );
+            }
+          }}
           className="
             text-[#BFA15F]
             mb-6
+            hover:underline
           "
         >
-
           ← Back to Patient
-
         </button>
-
 
         <h1
           className="
@@ -248,11 +230,8 @@ export default function NewDocumentPage() {
             mb-8
           "
         >
-
           Upload Document
-
         </h1>
-
 
         <div
           className="
@@ -264,10 +243,7 @@ export default function NewDocumentPage() {
             space-y-6
           "
         >
-
-
           <div>
-
             <label
               className="
                 block
@@ -275,21 +251,17 @@ export default function NewDocumentPage() {
                 text-gray-300
               "
             >
-
               Select Document
-
             </label>
-
 
             <input
               type="file"
               onChange={(e) => {
-
                 const selectedFile =
-                  e.target.files?.[0] || null;
+                  e.target.files?.[0] ||
+                  null;
 
                 setFile(selectedFile);
-
               }}
               className="
                 w-full
@@ -299,14 +271,12 @@ export default function NewDocumentPage() {
                 rounded-xl
                 px-4
                 py-3
+                text-sm
               "
             />
-
           </div>
 
-
           {file && (
-
             <div
               className="
                 bg-[#080808]
@@ -316,13 +286,14 @@ export default function NewDocumentPage() {
                 p-4
               "
             >
-
-              <p className="font-bold">
-
-                Selected File:
-
+              <p
+                className="
+                  font-bold
+                  text-[#D6C08A]
+                "
+              >
+                Selected File
               </p>
-
 
               <p
                 className="
@@ -331,18 +302,25 @@ export default function NewDocumentPage() {
                   break-all
                 "
               >
-
                 {file.name}
-
               </p>
 
+              <p
+                className="
+                  text-gray-500
+                  text-xs
+                  mt-2
+                "
+              >
+                {(file.size / 1024 / 1024).toFixed(
+                  2
+                )}{" "}
+                MB
+              </p>
             </div>
-
           )}
 
-
           <div>
-
             <label
               className="
                 block
@@ -350,11 +328,8 @@ export default function NewDocumentPage() {
                 text-gray-300
               "
             >
-
               Description
-
             </label>
-
 
             <textarea
               value={description}
@@ -363,10 +338,7 @@ export default function NewDocumentPage() {
                   e.target.value
                 )
               }
-              placeholder="
-                Example: Blood test results,
-                MRI scan, medical report
-              "
+              placeholder="Example: Blood test results, MRI scan, medical report"
               className="
                 w-full
                 h-32
@@ -377,15 +349,19 @@ export default function NewDocumentPage() {
                 px-4
                 py-3
                 outline-none
+                resize-none
+                focus:border-[#BFA15F]
               "
             />
-
           </div>
-
 
           <button
             onClick={uploadDocument}
-            disabled={saving}
+            disabled={
+              saving ||
+              !file ||
+              !patient_id
+            }
             className="
               w-full
               bg-[#BFA15F]
@@ -394,23 +370,38 @@ export default function NewDocumentPage() {
               rounded-xl
               font-bold
               disabled:opacity-50
+              disabled:cursor-not-allowed
             "
           >
-
             {saving
               ? "Uploading..."
-              : "Upload Document"
-            }
-
+              : "Upload Document"}
           </button>
-
-
         </div>
-
       </div>
-
     </main>
-
   );
+}
 
+export default function NewDocumentPage() {
+  return (
+    <Suspense
+      fallback={
+        <main
+          className="
+            min-h-screen
+            bg-[#080808]
+            text-white
+            flex
+            items-center
+            justify-center
+          "
+        >
+          Loading...
+        </main>
+      }
+    >
+      <NewDocumentContent />
+    </Suspense>
+  );
 }
