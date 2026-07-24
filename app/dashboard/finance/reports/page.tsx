@@ -22,11 +22,12 @@ export default function FinanceReportsPage() {
     loadReport();
   }, [month]);
 
-  function getMonthDates(selectedMonth: string) {
-    const [year, monthNumber] =
-      selectedMonth.split("-").map(Number);
+  async function loadReport() {
+    setLoading(true);
 
-    const startDate = `${selectedMonth}-01`;
+    const [year, monthNumber] = month.split("-").map(Number);
+
+    const startDate = `${month}-01`;
 
     const lastDay = new Date(
       year,
@@ -34,29 +35,16 @@ export default function FinanceReportsPage() {
       0
     ).getDate();
 
-    const endDate =
-      `${selectedMonth}-${String(lastDay).padStart(2, "0")}`;
-
-    return {
-      startDate,
-      endDate,
-    };
-  }
-
-  async function loadReport() {
-    setLoading(true);
-
-    const {
-      startDate,
-      endDate,
-    } = getMonthDates(month);
+    const endDate = `${month}-${String(lastDay).padStart(
+      2,
+      "0"
+    )}`;
 
     const [
       paymentsResult,
       incomeResult,
       expensesResult,
     ] = await Promise.all([
-
       supabase
         .from("payments")
         .select("*")
@@ -84,7 +72,6 @@ export default function FinanceReportsPage() {
         .order("expense_date", {
           ascending: true,
         }),
-
     ]);
 
     if (paymentsResult.error) {
@@ -108,24 +95,17 @@ export default function FinanceReportsPage() {
       );
     }
 
-    setPayments(
-      paymentsResult.data || []
-    );
-
-    setOtherIncome(
-      incomeResult.data || []
-    );
-
-    setExpenses(
-      expensesResult.data || []
-    );
+    setPayments(paymentsResult.data || []);
+    setOtherIncome(incomeResult.data || []);
+    setExpenses(expensesResult.data || []);
 
     setLoading(false);
   }
 
   function changeMonth(amount: number) {
-    const [year, monthNumber] =
-      month.split("-").map(Number);
+    const [year, monthNumber] = month
+      .split("-")
+      .map(Number);
 
     const newDate = new Date(
       year,
@@ -133,10 +113,9 @@ export default function FinanceReportsPage() {
       1
     );
 
-    const newMonth =
-      `${newDate.getFullYear()}-${String(
-        newDate.getMonth() + 1
-      ).padStart(2, "0")}`;
+    const newMonth = `${newDate.getFullYear()}-${String(
+      newDate.getMonth() + 1
+    ).padStart(2, "0")}`;
 
     setMonth(newMonth);
   }
@@ -144,93 +123,67 @@ export default function FinanceReportsPage() {
   function getMonthName() {
     const date = new Date(`${month}-01`);
 
-    return date.toLocaleDateString(
-      "en-US",
-      {
-        month: "long",
-        year: "numeric",
-      }
-    );
+    return date.toLocaleDateString("en-US", {
+      month: "long",
+      year: "numeric",
+    });
   }
 
-  const patientIncome =
-    payments.reduce(
-      (total, payment) =>
-        total + Number(payment.amount || 0),
-      0
-    );
+  const patientIncome = payments.reduce(
+    (total, payment) =>
+      total + Number(payment.amount || 0),
+    0
+  );
 
-  const additionalIncome =
-    otherIncome.reduce(
-      (total, income) =>
-        total + Number(income.amount || 0),
-      0
-    );
+  const additionalIncome = otherIncome.reduce(
+    (total, income) =>
+      total + Number(income.amount || 0),
+    0
+  );
 
   const totalIncome =
     patientIncome + additionalIncome;
 
-  const totalExpenses =
-    expenses.reduce(
-      (total, expense) =>
-        total + Number(expense.amount || 0),
-      0
-    );
+  const totalExpenses = expenses.reduce(
+    (total, expense) =>
+      total + Number(expense.amount || 0),
+    0
+  );
 
   const netProfit =
     totalIncome - totalExpenses;
 
   function formatAmount(amount: number) {
-    return amount.toLocaleString(
-      undefined,
-      {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      }
-    );
-  }
-
-  function printReport() {
-    window.print();
+    return amount.toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
   }
 
   function exportCSV() {
     const rows: string[][] = [];
 
-    rows.push([
-      "FINANCIAL REPORT",
-    ]);
-
-    rows.push([
-      getMonthName(),
-    ]);
-
+    rows.push(["FINANCIAL REPORT"]);
+    rows.push([getMonthName()]);
     rows.push([]);
 
-    rows.push([
-      "SUMMARY",
-    ]);
-
+    rows.push(["SUMMARY"]);
     rows.push([
       "Patient Payments",
       patientIncome.toFixed(2),
     ]);
-
     rows.push([
       "Other Income",
       additionalIncome.toFixed(2),
     ]);
-
     rows.push([
       "Total Income",
       totalIncome.toFixed(2),
     ]);
-
     rows.push([
       "Total Expenses",
       totalExpenses.toFixed(2),
     ]);
-
     rows.push([
       "Net Profit",
       netProfit.toFixed(2),
@@ -238,10 +191,7 @@ export default function FinanceReportsPage() {
 
     rows.push([]);
 
-    rows.push([
-      "PATIENT PAYMENTS",
-    ]);
-
+    rows.push(["PATIENT PAYMENTS"]);
     rows.push([
       "Date",
       "Amount",
@@ -264,10 +214,7 @@ export default function FinanceReportsPage() {
 
     rows.push([]);
 
-    rows.push([
-      "OTHER INCOME",
-    ]);
-
+    rows.push(["OTHER INCOME"]);
     rows.push([
       "Date",
       "Amount",
@@ -286,10 +233,7 @@ export default function FinanceReportsPage() {
 
     rows.push([]);
 
-    rows.push([
-      "EXPENSES",
-    ]);
-
+    rows.push(["EXPENSES"]);
     rows.push([
       "Date",
       "Amount",
@@ -309,30 +253,28 @@ export default function FinanceReportsPage() {
     const csv = rows
       .map((row) =>
         row
-          .map((cell) =>
-            `"${String(cell).replace(/"/g, '""')}"`
+          .map(
+            (cell) =>
+              `"${String(cell).replace(
+                /"/g,
+                '""'
+              )}"`
           )
           .join(",")
       )
       .join("\n");
 
-    const blob = new Blob(
-      [csv],
-      {
-        type: "text/csv;charset=utf-8;",
-      }
-    );
+    const blob = new Blob([csv], {
+      type: "text/csv;charset=utf-8;",
+    });
 
-    const url =
-      URL.createObjectURL(blob);
+    const url = URL.createObjectURL(blob);
 
-    const link =
-      document.createElement("a");
+    const link = document.createElement("a");
 
     link.href = url;
 
-    link.download =
-      `financial-report-${month}.csv`;
+    link.download = `financial-report-${month}.csv`;
 
     document.body.appendChild(link);
 
@@ -345,132 +287,58 @@ export default function FinanceReportsPage() {
 
   if (loading) {
     return (
-      <main
-        className="
-        min-h-screen
-        bg-[#080808]
-        text-white
-        flex
-        items-center
-        justify-center
-        "
-      >
-        Loading Report...
+      <main className="min-h-screen bg-[#080808] text-white flex items-center justify-center">
+        <p className="text-[#BFA15F] text-xl">
+          Loading Report...
+        </p>
       </main>
     );
   }
 
   return (
-    <main
-      className="
-      min-h-screen
-      bg-[#080808]
-      text-white
-      p-6
-      pt-24
-      "
-    >
-
+    <main className="min-h-screen bg-[#080808] text-white p-6 pt-24">
       <DashboardMenu />
 
       <div
         id="financial-report"
         className="max-w-6xl mx-auto"
       >
+        {/* HEADER */}
 
-        <div
-          className="
-          flex
-          justify-between
-          items-center
-          flex-wrap
-          gap-4
-          mb-8
-          "
-        >
-
+        <div className="flex justify-between items-center flex-wrap gap-4 mb-8">
           <div>
-
             <button
               onClick={() =>
-                router.push(
-                  "/dashboard/finance"
-                )
+                router.push("/dashboard/finance")
               }
-              className="
-              text-[#BFA15F]
-              mb-5
-              print:hidden
-              "
+              className="text-[#BFA15F] mb-5 print:hidden"
             >
               ← Back to Finance
             </button>
 
-            <h1
-              className="
-              text-3xl
-              font-bold
-              text-[#BFA15F]
-              "
-            >
+            <h1 className="text-3xl font-bold text-[#BFA15F]">
               Financial Reports
             </h1>
 
             <p className="text-gray-400 mt-2">
               Monthly financial report
             </p>
-
           </div>
-
         </div>
 
-        <div
-          className="
-          bg-[#171717]
-          border
-          border-[#BFA15F]/30
-          rounded-xl
-          p-5
-          mb-8
-          print:hidden
-          "
-        >
+        {/* MONTH SELECTOR */}
 
-          <div
-            className="
-            flex
-            justify-between
-            items-center
-            flex-wrap
-            gap-4
-            "
-          >
-
+        <div className="bg-[#171717] border border-[#BFA15F]/30 rounded-xl p-5 mb-8 print:hidden">
+          <div className="flex justify-between items-center flex-wrap gap-4">
             <button
-              onClick={() =>
-                changeMonth(-1)
-              }
-              className="
-              bg-[#080808]
-              border
-              border-[#BFA15F]/30
-              px-5
-              py-3
-              rounded-xl
-              "
+              onClick={() => changeMonth(-1)}
+              className="bg-[#080808] border border-[#BFA15F]/30 px-5 py-3 rounded-xl"
             >
               ← Previous Month
             </button>
 
             <div className="text-center">
-
-              <h2
-                className="
-                text-2xl
-                font-bold
-                text-[#D6C08A]
-                "
-              >
+              <h2 className="text-2xl font-bold text-[#D6C08A]">
                 {getMonthName()}
               </h2>
 
@@ -480,280 +348,118 @@ export default function FinanceReportsPage() {
                 onChange={(e) =>
                   setMonth(e.target.value)
                 }
-                className="
-                mt-3
-                bg-[#080808]
-                border
-                border-[#BFA15F]/30
-                rounded-xl
-                px-4
-                py-2
-                "
+                className="mt-3 bg-[#080808] border border-[#BFA15F]/30 rounded-xl px-4 py-2"
               />
-
             </div>
 
             <button
-              onClick={() =>
-                changeMonth(1)
-              }
-              className="
-              bg-[#080808]
-              border
-              border-[#BFA15F]/30
-              px-5
-              py-3
-              rounded-xl
-              "
+              onClick={() => changeMonth(1)}
+              className="bg-[#080808] border border-[#BFA15F]/30 px-5 py-3 rounded-xl"
             >
               Next Month →
             </button>
-
           </div>
-
         </div>
 
-        <div
-          className="
-          flex
-          gap-3
-          flex-wrap
-          mb-8
-          print:hidden
-          "
-        >
+        {/* ACTIONS */}
 
+        <div className="flex gap-3 flex-wrap mb-8 print:hidden">
           <button
-            onClick={printReport}
-            className="
-            bg-[#BFA15F]
-            text-black
-            px-5
-            py-3
-            rounded-xl
-            font-bold
-            "
+            onClick={() => window.print()}
+            className="bg-[#BFA15F] text-black px-5 py-3 rounded-xl font-bold"
           >
             🖨 Print / Save PDF
           </button>
 
           <button
             onClick={exportCSV}
-            className="
-            bg-[#171717]
-            border
-            border-[#BFA15F]
-            text-[#BFA15F]
-            px-5
-            py-3
-            rounded-xl
-            font-bold
-            "
+            className="bg-[#171717] border border-[#BFA15F] text-[#BFA15F] px-5 py-3 rounded-xl font-bold"
           >
             📊 Export Excel/CSV
           </button>
-
         </div>
 
-        <div
-          className="
-          grid
-          md:grid-cols-3
-          gap-5
-          mb-8
-          "
-        >
+        {/* SUMMARY CARDS */}
 
-          <div
-            className="
-            bg-[#171717]
-            border
-            border-[#BFA15F]/30
-            rounded-xl
-            p-6
-            "
-          >
-
+        <div className="grid md:grid-cols-3 gap-5 mb-8">
+          <div className="bg-[#171717] border border-[#BFA15F]/30 rounded-xl p-6">
             <p className="text-gray-400">
               Total Income
             </p>
 
-            <p
-              className="
-              text-3xl
-              font-bold
-              text-[#BFA15F]
-              mt-3
-              "
-            >
+            <p className="text-3xl font-bold text-[#BFA15F] mt-3">
               {formatAmount(totalIncome)}
             </p>
-
           </div>
 
-          <div
-            className="
-            bg-[#171717]
-            border
-            border-[#BFA15F]/30
-            rounded-xl
-            p-6
-            "
-          >
-
+          <div className="bg-[#171717] border border-[#BFA15F]/30 rounded-xl p-6">
             <p className="text-gray-400">
               Total Expenses
             </p>
 
-            <p
-              className="
-              text-3xl
-              font-bold
-              text-red-400
-              mt-3
-              "
-            >
+            <p className="text-3xl font-bold text-red-400 mt-3">
               {formatAmount(totalExpenses)}
             </p>
-
           </div>
 
-          <div
-            className="
-            bg-[#171717]
-            border
-            border-[#BFA15F]/30
-            rounded-xl
-            p-6
-            "
-          >
-
+          <div className="bg-[#171717] border border-[#BFA15F]/30 rounded-xl p-6">
             <p className="text-gray-400">
               Net Profit
             </p>
 
             <p
-              className={`
-              text-3xl
-              font-bold
-              mt-3
-              ${
+              className={`text-3xl font-bold mt-3 ${
                 netProfit >= 0
                   ? "text-green-400"
                   : "text-red-400"
-              }
-              `}
+              }`}
             >
               {formatAmount(netProfit)}
             </p>
-
           </div>
-
         </div>
 
-        <section
-          className="
-          bg-[#171717]
-          border
-          border-[#BFA15F]/30
-          rounded-xl
-          p-6
-          mb-8
-          "
-        >
+        {/* REPORT SUMMARY */}
 
-          <h2
-            className="
-            text-2xl
-            font-bold
-            text-[#D6C08A]
-            mb-6
-            "
-          >
+        <section className="bg-[#171717] border border-[#BFA15F]/30 rounded-xl p-6 mb-8">
+          <h2 className="text-2xl font-bold text-[#D6C08A] mb-6">
             Report Summary
           </h2>
 
           <div className="space-y-4">
-
-            <div
-              className="
-              flex
-              justify-between
-              border-b
-              border-[#BFA15F]/20
-              pb-4
-              "
-            >
-              <span>
-                Patient Payments
-              </span>
+            <div className="flex justify-between border-b border-[#BFA15F]/20 pb-4">
+              <span>Patient Payments</span>
 
               <span className="text-[#BFA15F]">
                 {formatAmount(patientIncome)}
               </span>
             </div>
 
-            <div
-              className="
-              flex
-              justify-between
-              border-b
-              border-[#BFA15F]/20
-              pb-4
-              "
-            >
-              <span>
-                Other Income
-              </span>
+            <div className="flex justify-between border-b border-[#BFA15F]/20 pb-4">
+              <span>Other Income</span>
 
               <span className="text-[#BFA15F]">
                 {formatAmount(additionalIncome)}
               </span>
             </div>
 
-            <div
-              className="
-              flex
-              justify-between
-              border-b
-              border-[#BFA15F]/20
-              pb-4
-              "
-            >
-              <span>
-                Total Income
-              </span>
+            <div className="flex justify-between border-b border-[#BFA15F]/20 pb-4">
+              <span>Total Income</span>
 
               <span className="text-[#BFA15F] font-bold">
                 {formatAmount(totalIncome)}
               </span>
             </div>
 
-            <div
-              className="
-              flex
-              justify-between
-              border-b
-              border-[#BFA15F]/20
-              pb-4
-              "
-            >
-              <span>
-                Total Expenses
-              </span>
+            <div className="flex justify-between border-b border-[#BFA15F]/20 pb-4">
+              <span>Total Expenses</span>
 
               <span className="text-red-400 font-bold">
                 - {formatAmount(totalExpenses)}
               </span>
             </div>
 
-            <div
-              className="
-              flex
-              justify-between
-              pt-2
-              "
-            >
+            <div className="flex justify-between pt-2">
               <span className="font-bold">
                 Net Profit
               </span>
@@ -768,75 +474,36 @@ export default function FinanceReportsPage() {
                 {formatAmount(netProfit)}
               </span>
             </div>
-
           </div>
-
         </section>
 
-        <section
-          className="
-          bg-[#171717]
-          border
-          border-[#BFA15F]/30
-          rounded-xl
-          p-6
-          mb-8
-          "
-        >
+        {/* PATIENT PAYMENTS */}
 
-          <h2
-            className="
-            text-2xl
-            font-bold
-            text-[#D6C08A]
-            mb-6
-            "
-          >
+        <section className="bg-[#171717] border border-[#BFA15F]/30 rounded-xl p-6 mb-8">
+          <h2 className="text-2xl font-bold text-[#D6C08A] mb-6">
             Patient Payments
           </h2>
 
           {payments.length === 0 ? (
-
             <p className="text-gray-400">
               No patient payments this month.
             </p>
-
           ) : (
-
             <div className="space-y-4">
-
               {payments.map((payment) => (
-
                 <div
                   key={payment.id}
-                  onClick={() =>
-                    payment.patient_id &&
-                    router.push(
-                      `/dashboard/patients/${payment.patient_id}`
-                    )
-                  }
-                  className="
-                  bg-[#080808]
-                  border
-                  border-[#BFA15F]/20
-                  rounded-xl
-                  p-4
-                  cursor-pointer
-                  hover:border-[#BFA15F]
-                  "
+                  onClick={() => {
+                    if (payment.patient_id) {
+                      router.push(
+                        `/dashboard/patients/${payment.patient_id}`
+                      );
+                    }
+                  }}
+                  className="bg-[#080808] border border-[#BFA15F]/20 rounded-xl p-4 cursor-pointer hover:border-[#BFA15F]"
                 >
-
-                  <div
-                    className="
-                    flex
-                    justify-between
-                    flex-wrap
-                    gap-3
-                    "
-                  >
-
+                  <div className="flex justify-between flex-wrap gap-3">
                     <div>
-
                       <p className="font-bold">
                         {payment.payment_type ||
                           "Patient Payment"}
@@ -847,68 +514,34 @@ export default function FinanceReportsPage() {
                       </p>
 
                       <p className="text-gray-400">
-                        {payment.payment_method ||
-                          "-"}
+                        {payment.payment_method || "-"}
                       </p>
-
                     </div>
 
-                    <p
-                      className="
-                      text-[#BFA15F]
-                      font-bold
-                      text-xl
-                      "
-                    >
+                    <p className="text-[#BFA15F] font-bold text-xl">
                       {payment.amount}
                     </p>
-
                   </div>
-
                 </div>
-
               ))}
-
             </div>
-
           )}
-
         </section>
 
-        <section
-          className="
-          bg-[#171717]
-          border
-          border-[#BFA15F]/30
-          rounded-xl
-          p-6
-          mb-8
-          "
-        >
+        {/* OTHER INCOME */}
 
-          <h2
-            className="
-            text-2xl
-            font-bold
-            text-[#D6C08A]
-            mb-6
-            "
-          >
+        <section className="bg-[#171717] border border-[#BFA15F]/30 rounded-xl p-6 mb-8">
+          <h2 className="text-2xl font-bold text-[#D6C08A] mb-6">
             Other Income
           </h2>
 
           {otherIncome.length === 0 ? (
-
             <p className="text-gray-400">
               No other income this month.
             </p>
-
           ) : (
-
             <div className="space-y-4">
-
               {otherIncome.map((income) => (
-
                 <div
                   key={income.id}
                   onClick={() =>
@@ -916,28 +549,10 @@ export default function FinanceReportsPage() {
                       `/dashboard/finance/income/${income.id}`
                     )
                   }
-                  className="
-                  bg-[#080808]
-                  border
-                  border-[#BFA15F]/20
-                  rounded-xl
-                  p-4
-                  cursor-pointer
-                  hover:border-[#BFA15F]
-                  "
+                  className="bg-[#080808] border border-[#BFA15F]/20 rounded-xl p-4 cursor-pointer hover:border-[#BFA15F]"
                 >
-
-                  <div
-                    className="
-                    flex
-                    justify-between
-                    flex-wrap
-                    gap-3
-                    "
-                  >
-
+                  <div className="flex justify-between flex-wrap gap-3">
                     <div>
-
                       <p className="font-bold">
                         {income.source ||
                           "Other Income"}
@@ -948,67 +563,34 @@ export default function FinanceReportsPage() {
                       </p>
 
                       <p className="mt-2">
-                        {income.description ||
-                          "-"}
+                        {income.description || "-"}
                       </p>
-
                     </div>
 
-                    <p
-                      className="
-                      text-[#BFA15F]
-                      font-bold
-                      text-xl
-                      "
-                    >
+                    <p className="text-[#BFA15F] font-bold text-xl">
                       + {income.amount}
                     </p>
-
                   </div>
-
                 </div>
-
               ))}
-
             </div>
-
           )}
-
         </section>
 
-        <section
-          className="
-          bg-[#171717]
-          border
-          border-[#BFA15F]/30
-          rounded-xl
-          p-6
-          "
-        >
+        {/* EXPENSES */}
 
-          <h2
-            className="
-            text-2xl
-            font-bold
-            text-[#D6C08A]
-            mb-6
-            "
-          >
+        <section className="bg-[#171717] border border-[#BFA15F]/30 rounded-xl p-6">
+          <h2 className="text-2xl font-bold text-[#D6C08A] mb-6">
             Expenses
           </h2>
 
           {expenses.length === 0 ? (
-
             <p className="text-gray-400">
               No expenses this month.
             </p>
-
           ) : (
-
             <div className="space-y-4">
-
               {expenses.map((expense) => (
-
                 <div
                   key={expense.id}
                   onClick={() =>
@@ -1016,31 +598,12 @@ export default function FinanceReportsPage() {
                       `/dashboard/finance/expenses/${expense.id}`
                     )
                   }
-                  className="
-                  bg-[#080808]
-                  border
-                  border-[#BFA15F]/20
-                  rounded-xl
-                  p-4
-                  cursor-pointer
-                  hover:border-[#BFA15F]
-                  "
+                  className="bg-[#080808] border border-[#BFA15F]/20 rounded-xl p-4 cursor-pointer hover:border-[#BFA15F]"
                 >
-
-                  <div
-                    className="
-                    flex
-                    justify-between
-                    flex-wrap
-                    gap-3
-                    "
-                  >
-
+                  <div className="flex justify-between flex-wrap gap-3">
                     <div>
-
                       <p className="font-bold">
-                        {expense.category ||
-                          "Expense"}
+                        {expense.category || "Expense"}
                       </p>
 
                       <p className="text-gray-400">
@@ -1048,40 +611,23 @@ export default function FinanceReportsPage() {
                       </p>
 
                       <p className="mt-2">
-                        {expense.description ||
-                          "-"}
+                        {expense.description || "-"}
                       </p>
-
                     </div>
 
-                    <p
-                      className="
-                      text-red-400
-                      font-bold
-                      text-xl
-                      "
-                    >
+                    <p className="text-red-400 font-bold text-xl">
                       - {expense.amount}
                     </p>
-
                   </div>
-
                 </div>
-
               ))}
-
             </div>
-
           )}
-
         </section>
-
       </div>
 
       <style jsx global>{`
-
         @media print {
-
           body {
             background: white !important;
             color: black !important;
@@ -1095,16 +641,8 @@ export default function FinanceReportsPage() {
             color: black !important;
             border-color: #ccc !important;
           }
-
-          .bg-[#171717],
-          .bg-[#080808] {
-            background: white !important;
-          }
-
         }
-
       `}</style>
-
     </main>
   );
 }
