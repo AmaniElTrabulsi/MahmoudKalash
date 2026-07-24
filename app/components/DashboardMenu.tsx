@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
 
 export default function DashboardMenu() {
   const router = useRouter();
-
   const [open, setOpen] = useState(false);
 
   const links = [
@@ -13,48 +13,39 @@ export default function DashboardMenu() {
       name: "Dashboard",
       path: "/dashboard",
     },
-
     {
       name: "Calendar",
       path: "/dashboard/calendar",
     },
-
     {
       name: "Appointments",
       path: "/dashboard/appointments",
     },
-
     {
       name: "Patients",
       path: "/dashboard/patients",
     },
-
     {
       name: "Reminders",
       path: "/dashboard/reminders",
     },
-
     {
       name: "Finance",
       path: "/dashboard/finance",
     },
   ];
 
-  function logout() {
-    // Remove logged-in user
+  async function logout() {
     localStorage.removeItem("doctor_user");
 
-    // Close menu
-    setOpen(false);
+    await supabase.auth.signOut();
 
-    // Go to login
-    router.replace("/login");
+    router.push("/login");
   }
 
   return (
     <>
-
-      {/* TOP BAR */}
+      {/* FIXED TOP BAR */}
 
       <div
         className="
@@ -72,7 +63,6 @@ export default function DashboardMenu() {
           px-4
         "
       >
-
         <button
           onClick={() => setOpen(true)}
           className="
@@ -88,7 +78,6 @@ export default function DashboardMenu() {
           ☰
         </button>
 
-
         <h1
           className="
             ml-4
@@ -99,14 +88,15 @@ export default function DashboardMenu() {
         >
           Dr. Mahmoud Kalash
         </h1>
-
       </div>
 
+      {/* IMPORTANT: RESERVES SPACE FOR FIXED MENU */}
+
+      <div className="h-16" />
 
       {/* OVERLAY */}
 
       {open && (
-
         <div
           className="
             fixed
@@ -116,9 +106,7 @@ export default function DashboardMenu() {
           "
           onClick={() => setOpen(false)}
         />
-
       )}
-
 
       {/* SIDE MENU */}
 
@@ -136,8 +124,6 @@ export default function DashboardMenu() {
           p-6
           transition-transform
           duration-300
-          flex
-          flex-col
           ${
             open
               ? "translate-x-0"
@@ -145,17 +131,7 @@ export default function DashboardMenu() {
           }
         `}
       >
-
-        {/* MENU HEADER */}
-
-        <div
-          className="
-            flex
-            justify-between
-            items-center
-            mb-8
-          "
-        >
+        <div className="flex justify-between items-center mb-8">
 
           <h1
             className="
@@ -166,7 +142,6 @@ export default function DashboardMenu() {
           >
             Dr. Mahmoud Kalash
           </h1>
-
 
           <button
             onClick={() => setOpen(false)}
@@ -179,9 +154,6 @@ export default function DashboardMenu() {
           </button>
 
         </div>
-
-
-        {/* NAVIGATION */}
 
         <div className="space-y-3">
 
@@ -213,38 +185,31 @@ export default function DashboardMenu() {
 
           ))}
 
-        </div>
-
-
-        {/* LOGOUT AT BOTTOM */}
-
-        <div className="mt-auto pt-6">
+          {/* LOGOUT */}
 
           <button
             onClick={logout}
             className="
               w-full
+              text-left
               px-4
               py-3
               rounded-xl
-              bg-red-900/30
+              bg-red-900/20
               border
-              border-red-500/40
-              text-red-300
-              font-bold
-              hover:bg-red-900/50
-              hover:border-red-400
+              border-red-500/30
+              text-red-400
+              hover:bg-red-900/40
               transition
+              mt-6
             "
           >
-            🚪 Logout
+            Logout
           </button>
 
         </div>
 
       </div>
-
     </>
-
   );
 }
