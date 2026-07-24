@@ -1,124 +1,79 @@
 "use client";
 
 import { useState } from "react";
-import { supabase } from "@/lib/supabase";
 
 export default function LoginPage() {
   const [message, setMessage] = useState("");
-  const [loading, setLoading] = useState(false);
 
-  async function testSupabase() {
-    setMessage("");
-    setLoading(true);
+  function testEnvironment() {
+    const supabaseUrl =
+      process.env.NEXT_PUBLIC_SUPABASE_URL;
 
-    try {
-      console.log("Testing Supabase connection...");
+    const supabaseKey =
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-      const {
-        data,
-        error,
-      } = await supabase
-        .from("users")
-        .select("id")
-        .limit(1);
-
-      console.log("TEST DATA:", data);
-      console.log("TEST ERROR:", error);
-
-      if (error) {
-        setMessage(
-          "Supabase error: " +
-          error.message
-        );
-
-        return;
-      }
-
-      setMessage(
-        "Supabase connection works!"
-      );
-
-    } catch (error: any) {
-      console.error(
-        "FETCH ERROR:",
-        error
-      );
-
-      setMessage(
-        "FETCH ERROR: " +
-        (error?.message || "Failed to fetch")
-      );
-
-    } finally {
-      setLoading(false);
-    }
+    setMessage(
+      JSON.stringify(
+        {
+          url: supabaseUrl || "MISSING",
+          keyExists: !!supabaseKey,
+          keyLength: supabaseKey?.length || 0,
+        },
+        null,
+        2
+      )
+    );
   }
 
   return (
     <main
-      className="
-        min-h-screen
-        bg-[#080808]
-        text-white
-        flex
-        items-center
-        justify-center
-        px-4
-      "
+      style={{
+        minHeight: "100vh",
+        background: "#080808",
+        color: "white",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "20px",
+      }}
     >
       <div
-        className="
-          w-full
-          max-w-md
-          bg-[#171717]
-          border
-          border-[#BFA15F]/30
-          rounded-2xl
-          p-8
-        "
+        style={{
+          width: "100%",
+          maxWidth: "500px",
+          background: "#171717",
+          padding: "30px",
+          borderRadius: "16px",
+        }}
       >
-        <h1
-          className="
-            text-3xl
-            text-center
-            font-bold
-            text-[#BFA15F]
-            mb-8
-          "
-        >
-          Supabase Connection Test
+        <h1>
+          Environment Test
         </h1>
 
         <button
-          onClick={testSupabase}
-          disabled={loading}
-          className="
-            w-full
-            h-14
-            bg-[#BFA15F]
-            text-black
-            rounded-xl
-            font-bold
-            disabled:opacity-50
-          "
+          onClick={testEnvironment}
+          style={{
+            width: "100%",
+            padding: "15px",
+            marginTop: "20px",
+            background: "#BFA15F",
+            border: "none",
+            borderRadius: "10px",
+            fontWeight: "bold",
+          }}
         >
-          {loading
-            ? "Testing..."
-            : "Test Supabase Connection"}
+          Check Environment Variables
         </button>
 
-        {message && (
-          <p
-            className="
-              mt-6
-              text-center
-              break-words
-              text-gray-300
-            "
-          >
-            {message}
-          </p>
-        )}
+        <pre
+          style={{
+            marginTop: "20px",
+            whiteSpace: "pre-wrap",
+            wordBreak: "break-word",
+          }}
+        >
+          {message}
+        </pre>
       </div>
     </main>
   );
