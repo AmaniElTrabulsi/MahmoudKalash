@@ -27,46 +27,48 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const {
-        data,
-        error,
-      } = await supabase.rpc(
-        "check_user_password",
-        {
-          input_username:
-            username.trim(),
-
-          input_password:
-            password,
-        }
+      console.log(
+        "Supabase URL:",
+        process.env.NEXT_PUBLIC_SUPABASE_URL
       );
 
       console.log(
-        "LOGIN DATA:",
-        data
+        "Starting login..."
       );
+
+      const result =
+        await supabase.rpc(
+          "check_user_password",
+          {
+            input_username:
+              username.trim(),
+
+            input_password:
+              password,
+          }
+        );
 
       console.log(
-        "LOGIN ERROR:",
-        error
+        "RPC RESULT:",
+        result
       );
 
-      if (error) {
+      if (result.error) {
         console.error(
-          "LOGIN DATABASE ERROR:",
-          error
+          "DATABASE ERROR:",
+          result.error
         );
 
         setMessage(
-          `Error: ${
-            error.message
+          `Database error: ${
+            result.error.message
           }`
         );
 
         return;
       }
 
-      if (!data) {
+      if (!result.data) {
         setMessage(
           "Invalid username or password"
         );
@@ -74,9 +76,16 @@ export default function LoginPage() {
         return;
       }
 
+      console.log(
+        "LOGIN SUCCESS:",
+        result.data
+      );
+
       localStorage.setItem(
         "doctor_user",
-        JSON.stringify(data)
+        JSON.stringify(
+          result.data
+        )
       );
 
       router.push(
@@ -85,8 +94,18 @@ export default function LoginPage() {
 
     } catch (error: any) {
       console.error(
-        "NETWORK ERROR:",
+        "FULL LOGIN ERROR:",
         error
+      );
+
+      console.error(
+        "ERROR MESSAGE:",
+        error?.message
+      );
+
+      console.error(
+        "ERROR NAME:",
+        error?.name
       );
 
       setMessage(
@@ -138,7 +157,10 @@ export default function LoginPage() {
           Dr. Mahmoud Kalash
         </h1>
 
+
         <input
+          type="text"
+          autoComplete="username"
           className="
             w-full
             h-14
@@ -160,8 +182,10 @@ export default function LoginPage() {
           }
         />
 
+
         <input
           type="password"
+          autoComplete="current-password"
           className="
             w-full
             h-14
@@ -182,13 +206,20 @@ export default function LoginPage() {
             )
           }
           onKeyDown={(e) => {
-            if (e.key === "Enter") {
+
+            if (
+              e.key === "Enter" &&
+              !loading
+            ) {
               login();
             }
+
           }}
         />
 
+
         {message && (
+
           <p
             className="
               text-red-400
@@ -199,7 +230,9 @@ export default function LoginPage() {
           >
             {message}
           </p>
+
         )}
+
 
         <button
           onClick={login}
@@ -212,11 +245,15 @@ export default function LoginPage() {
             rounded-xl
             font-bold
             disabled:opacity-50
+            disabled:cursor-not-allowed
           "
         >
+
           {loading
             ? "Checking..."
-            : "Login"}
+            : "Login"
+          }
+
         </button>
 
       </div>
