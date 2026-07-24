@@ -14,8 +14,8 @@ export default async function NewPrescriptionPage({
 
   return (
     <NewPrescriptionForm
-      patientId={params.patient_id || ""}
-      visitId={params.visit_id || ""}
+      patientId={params.patient_id ?? ""}
+      visitId={params.visit_id ?? ""}
     />
   );
 }

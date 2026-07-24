@@ -1,15 +1,7 @@
 "use client";
 
-import {
-  Suspense,
-  useState,
-} from "react";
-
-import {
-  useSearchParams,
-  useRouter,
-} from "next/navigation";
-
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import DashboardMenu from "@/app/components/DashboardMenu";
 
@@ -21,34 +13,18 @@ type Medicine = {
   instructions: string;
 };
 
-export default function NewPrescriptionForm() {
-  return (
-    <Suspense
-      fallback={
-        <main className="min-h-screen bg-[#080808] text-white flex items-center justify-center">
-          <p className="text-[#BFA15F] text-xl">
-            Loading...
-          </p>
-        </main>
-      }
-    >
-      <PrescriptionFormContent />
-    </Suspense>
-  );
-}
+type NewPrescriptionFormProps = {
+  patientId: string;
+  visitId: string;
+};
 
-function PrescriptionFormContent() {
-  const searchParams = useSearchParams();
+export default function NewPrescriptionForm({
+  patientId,
+  visitId,
+}: NewPrescriptionFormProps) {
   const router = useRouter();
 
-  const patientId =
-    searchParams.get("patient_id");
-
-  const visitId =
-    searchParams.get("visit_id");
-
-  const [notes, setNotes] =
-    useState("");
+  const [notes, setNotes] = useState("");
 
   const [medicines, setMedicines] =
     useState<Medicine[]>([
@@ -61,8 +37,7 @@ function PrescriptionFormContent() {
       },
     ]);
 
-  const [saving, setSaving] =
-    useState(false);
+  const [saving, setSaving] = useState(false);
 
   function updateMedicine(
     index: number,
@@ -70,13 +45,14 @@ function PrescriptionFormContent() {
     value: string
   ) {
     setMedicines((currentMedicines) =>
-      currentMedicines.map((medicine, medicineIndex) =>
-        medicineIndex === index
-          ? {
-              ...medicine,
-              [field]: value,
-            }
-          : medicine
+      currentMedicines.map(
+        (medicine, medicineIndex) =>
+          medicineIndex === index
+            ? {
+                ...medicine,
+                [field]: value,
+              }
+            : medicine
       )
     );
   }
@@ -141,7 +117,11 @@ function PrescriptionFormContent() {
         .single();
 
       if (prescriptionError) {
-        console.error(prescriptionError);
+        console.error(
+          "Prescription error:",
+          prescriptionError
+        );
+
         alert(prescriptionError.message);
         return;
       }
@@ -174,7 +154,10 @@ function PrescriptionFormContent() {
         .insert(itemsToInsert);
 
       if (itemsError) {
-        console.error(itemsError);
+        console.error(
+          "Prescription items error:",
+          itemsError
+        );
 
         await supabase
           .from("prescriptions")
@@ -185,7 +168,9 @@ function PrescriptionFormContent() {
         return;
       }
 
-      alert("Prescription saved successfully");
+      alert(
+        "Prescription saved successfully"
+      );
 
       router.push(
         `/dashboard/patients/${patientId}`
@@ -205,11 +190,22 @@ function PrescriptionFormContent() {
   }
 
   return (
-    <main className="min-h-screen bg-[#080808] text-white p-6 pt-24">
+    <main className="
+      min-h-screen
+      bg-[#080808]
+      text-white
+      p-6
+      pt-24
+    ">
 
       <DashboardMenu />
 
-      <div className="max-w-4xl mx-auto">
+      <div className="
+        max-w-4xl
+        mx-auto
+      ">
+
+        {/* BACK BUTTON */}
 
         <button
           onClick={() =>
@@ -217,20 +213,47 @@ function PrescriptionFormContent() {
               `/dashboard/patients/${patientId}`
             )
           }
-          className="text-[#BFA15F] mb-6"
+          className="
+            text-[#BFA15F]
+            mb-6
+          "
         >
           ← Back to Patient
         </button>
 
-        <h1 className="text-3xl font-bold text-[#BFA15F] mb-8">
+
+        {/* TITLE */}
+
+        <h1 className="
+          text-3xl
+          font-bold
+          text-[#BFA15F]
+          mb-8
+        ">
           New Prescription
         </h1>
 
-        <div className="bg-[#171717] border border-[#BFA15F]/30 rounded-xl p-6">
+
+        {/* MAIN CARD */}
+
+        <div className="
+          bg-[#171717]
+          border
+          border-[#BFA15F]/30
+          rounded-xl
+          p-6
+        ">
+
+
+          {/* NOTES */}
 
           <div className="mb-8">
 
-            <label className="block mb-2 text-gray-300">
+            <label className="
+              block
+              mb-2
+              text-gray-300
+            ">
               Prescription Notes
             </label>
 
@@ -239,38 +262,89 @@ function PrescriptionFormContent() {
               onChange={(e) =>
                 setNotes(e.target.value)
               }
-              placeholder="General prescription notes..."
-              className="w-full h-32 bg-[#080808] border border-[#BFA15F]/30 rounded-xl px-4 py-3 outline-none"
+              placeholder="
+                General prescription notes...
+              "
+              className="
+                w-full
+                h-32
+                bg-[#080808]
+                border
+                border-[#BFA15F]/30
+                rounded-xl
+                px-4
+                py-3
+                outline-none
+              "
             />
 
           </div>
 
-          <div className="flex justify-between items-center mb-5 gap-4">
 
-            <h2 className="text-2xl font-bold text-[#D6C08A]">
+          {/* MEDICINES HEADER */}
+
+          <div className="
+            flex
+            justify-between
+            items-center
+            mb-5
+            gap-4
+          ">
+
+            <h2 className="
+              text-2xl
+              font-bold
+              text-[#D6C08A]
+            ">
               Medicines
             </h2>
 
             <button
               onClick={addMedicine}
-              className="bg-[#BFA15F] text-black px-4 py-2 rounded-xl font-bold whitespace-nowrap"
+              className="
+                bg-[#BFA15F]
+                text-black
+                px-4
+                py-2
+                rounded-xl
+                font-bold
+                whitespace-nowrap
+              "
             >
               + Add Medicine
             </button>
 
           </div>
 
+
+          {/* MEDICINES */}
+
           {medicines.map(
             (medicine, index) => (
 
               <div
                 key={index}
-                className="border border-[#BFA15F]/30 rounded-xl p-5 mb-6"
+                className="
+                  border
+                  border-[#BFA15F]/30
+                  rounded-xl
+                  p-5
+                  mb-6
+                "
               >
 
-                <div className="flex justify-between items-center mb-5">
+                <div className="
+                  flex
+                  justify-between
+                  items-center
+                  mb-5
+                ">
 
-                  <h3 className="text-xl font-bold text-[#D6C08A]">
+                  <h3 className="
+                    text-xl
+                    font-bold
+                    text-[#D6C08A]
+                  ">
                     Medicine {index + 1}
                   </h3>
 
@@ -280,7 +354,9 @@ function PrescriptionFormContent() {
                       onClick={() =>
                         removeMedicine(index)
                       }
-                      className="text-red-400"
+                      className="
+                        text-red-400
+                      "
                     >
                       Remove
                     </button>
@@ -289,7 +365,14 @@ function PrescriptionFormContent() {
 
                 </div>
 
-                <div className="grid md:grid-cols-2 gap-4">
+
+                {/* MEDICINE FIELDS */}
+
+                <div className="
+                  grid
+                  md:grid-cols-2
+                  gap-4
+                ">
 
                   <input
                     value={
@@ -302,12 +385,25 @@ function PrescriptionFormContent() {
                         e.target.value
                       )
                     }
-                    placeholder="Medicine Name *"
-                    className="bg-[#080808] border border-[#BFA15F]/30 rounded-xl px-4 py-3 outline-none"
+                    placeholder="
+                      Medicine Name *
+                    "
+                    className="
+                      bg-[#080808]
+                      border
+                      border-[#BFA15F]/30
+                      rounded-xl
+                      px-4
+                      py-3
+                      outline-none
+                    "
                   />
 
+
                   <input
-                    value={medicine.dose}
+                    value={
+                      medicine.dose
+                    }
                     onChange={(e) =>
                       updateMedicine(
                         index,
@@ -315,12 +411,25 @@ function PrescriptionFormContent() {
                         e.target.value
                       )
                     }
-                    placeholder="Dose (e.g. 500 mg)"
-                    className="bg-[#080808] border border-[#BFA15F]/30 rounded-xl px-4 py-3 outline-none"
+                    placeholder="
+                      Dose (e.g. 500 mg)
+                    "
+                    className="
+                      bg-[#080808]
+                      border
+                      border-[#BFA15F]/30
+                      rounded-xl
+                      px-4
+                      py-3
+                      outline-none
+                    "
                   />
 
+
                   <input
-                    value={medicine.frequency}
+                    value={
+                      medicine.frequency
+                    }
                     onChange={(e) =>
                       updateMedicine(
                         index,
@@ -328,12 +437,25 @@ function PrescriptionFormContent() {
                         e.target.value
                       )
                     }
-                    placeholder="Frequency (e.g. 2 times daily)"
-                    className="bg-[#080808] border border-[#BFA15F]/30 rounded-xl px-4 py-3 outline-none"
+                    placeholder="
+                      Frequency (e.g. 2 times daily)
+                    "
+                    className="
+                      bg-[#080808]
+                      border
+                      border-[#BFA15F]/30
+                      rounded-xl
+                      px-4
+                      py-3
+                      outline-none
+                    "
                   />
 
+
                   <input
-                    value={medicine.duration}
+                    value={
+                      medicine.duration
+                    }
                     onChange={(e) =>
                       updateMedicine(
                         index,
@@ -341,14 +463,29 @@ function PrescriptionFormContent() {
                         e.target.value
                       )
                     }
-                    placeholder="Duration (e.g. 7 days)"
-                    className="bg-[#080808] border border-[#BFA15F]/30 rounded-xl px-4 py-3 outline-none"
+                    placeholder="
+                      Duration (e.g. 7 days)
+                    "
+                    className="
+                      bg-[#080808]
+                      border
+                      border-[#BFA15F]/30
+                      rounded-xl
+                      px-4
+                      py-3
+                      outline-none
+                    "
                   />
 
                 </div>
 
+
+                {/* INSTRUCTIONS */}
+
                 <textarea
-                  value={medicine.instructions}
+                  value={
+                    medicine.instructions
+                  }
                   onChange={(e) =>
                     updateMedicine(
                       index,
@@ -356,8 +493,21 @@ function PrescriptionFormContent() {
                       e.target.value
                     )
                   }
-                  placeholder="Instructions..."
-                  className="w-full h-28 mt-4 bg-[#080808] border border-[#BFA15F]/30 rounded-xl px-4 py-3 outline-none"
+                  placeholder="
+                    Instructions...
+                  "
+                  className="
+                    w-full
+                    h-28
+                    mt-4
+                    bg-[#080808]
+                    border
+                    border-[#BFA15F]/30
+                    rounded-xl
+                    px-4
+                    py-3
+                    outline-none
+                  "
                 />
 
               </div>
@@ -365,10 +515,21 @@ function PrescriptionFormContent() {
             )
           )}
 
+
+          {/* SAVE */}
+
           <button
             onClick={savePrescription}
             disabled={saving}
-            className="w-full bg-[#BFA15F] text-black py-3 rounded-xl font-bold disabled:opacity-50"
+            className="
+              w-full
+              bg-[#BFA15F]
+              text-black
+              py-3
+              rounded-xl
+              font-bold
+              disabled:opacity-50
+            "
           >
             {saving
               ? "Saving..."
