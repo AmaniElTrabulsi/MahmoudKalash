@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Suspense,
   useState,
 } from "react";
 
@@ -12,7 +13,6 @@ import {
 import { supabase } from "@/lib/supabase";
 import DashboardMenu from "@/app/components/DashboardMenu";
 
-
 type Medicine = {
   medicine_name: string;
   dose: string;
@@ -21,30 +21,37 @@ type Medicine = {
   instructions: string;
 };
 
-
 export default function NewPrescriptionForm() {
+  return (
+    <Suspense
+      fallback={
+        <main className="min-h-screen bg-[#080808] text-white flex items-center justify-center">
+          <p className="text-[#BFA15F] text-xl">
+            Loading...
+          </p>
+        </main>
+      }
+    >
+      <PrescriptionFormContent />
+    </Suspense>
+  );
+}
 
-  const searchParams =
-    useSearchParams();
+function PrescriptionFormContent() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
 
-  const router =
-    useRouter();
-
-
-  const patient_id =
+  const patientId =
     searchParams.get("patient_id");
 
-  const visit_id =
+  const visitId =
     searchParams.get("visit_id");
-
 
   const [notes, setNotes] =
     useState("");
 
-
   const [medicines, setMedicines] =
     useState<Medicine[]>([
-
       {
         medicine_name: "",
         dose: "",
@@ -52,38 +59,31 @@ export default function NewPrescriptionForm() {
         duration: "",
         instructions: "",
       },
-
     ]);
-
 
   const [saving, setSaving] =
     useState(false);
-
 
   function updateMedicine(
     index: number,
     field: keyof Medicine,
     value: string
   ) {
-
-    const updated =
-      [...medicines];
-
-    updated[index] = {
-      ...updated[index],
-      [field]: value,
-    };
-
-    setMedicines(updated);
+    setMedicines((currentMedicines) =>
+      currentMedicines.map((medicine, medicineIndex) =>
+        medicineIndex === index
+          ? {
+              ...medicine,
+              [field]: value,
+            }
+          : medicine
+      )
+    );
   }
 
-
   function addMedicine() {
-
-    setMedicines([
-
-      ...medicines,
-
+    setMedicines((currentMedicines) => [
+      ...currentMedicines,
       {
         medicine_name: "",
         dose: "",
@@ -91,37 +91,27 @@ export default function NewPrescriptionForm() {
         duration: "",
         instructions: "",
       },
-
     ]);
   }
 
-
   function removeMedicine(index: number) {
-
     if (medicines.length === 1) {
       return;
     }
 
-    setMedicines(
-      medicines.filter(
+    setMedicines((currentMedicines) =>
+      currentMedicines.filter(
         (_, medicineIndex) =>
           medicineIndex !== index
       )
     );
   }
 
-
   async function savePrescription() {
-
-    if (!patient_id) {
-
-      alert(
-        "Patient ID is missing"
-      );
-
+    if (!patientId) {
+      alert("Patient ID is missing");
       return;
     }
-
 
     const validMedicines =
       medicines.filter(
@@ -129,136 +119,79 @@ export default function NewPrescriptionForm() {
           medicine.medicine_name.trim() !== ""
       );
 
-
-    if (
-      validMedicines.length === 0
-    ) {
-
-      alert(
-        "Please add at least one medicine"
-      );
-
+    if (validMedicines.length === 0) {
+      alert("Please add at least one medicine");
       return;
     }
 
-
     setSaving(true);
 
-
     try {
-
       const {
         data: prescription,
         error: prescriptionError,
       } = await supabase
-
         .from("prescriptions")
-
         .insert({
-
-          patient_id,
-
-          visit_id:
-            visit_id || null,
-
-          notes:
-            notes.trim() || null,
-
+          patient_id: patientId,
+          visit_id: visitId || null,
+          notes: notes.trim() || null,
         })
-
         .select()
-
         .single();
 
-
       if (prescriptionError) {
-
-        console.error(
-          prescriptionError
-        );
-
-        alert(
-          prescriptionError.message
-        );
-
+        console.error(prescriptionError);
+        alert(prescriptionError.message);
         return;
       }
 
-
       const itemsToInsert =
-        validMedicines.map(
-          (medicine) => ({
+        validMedicines.map((medicine) => ({
+          prescription_id:
+            prescription.id,
 
-            prescription_id:
-              prescription.id,
+          medicine_name:
+            medicine.medicine_name.trim(),
 
-            medicine_name:
-              medicine.medicine_name.trim(),
+          dose:
+            medicine.dose.trim() || null,
 
-            dose:
-              medicine.dose.trim() || null,
+          frequency:
+            medicine.frequency.trim() || null,
 
-            frequency:
-              medicine.frequency.trim() || null,
+          duration:
+            medicine.duration.trim() || null,
 
-            duration:
-              medicine.duration.trim() || null,
-
-            instructions:
-              medicine.instructions.trim() || null,
-
-          })
-        );
-
+          instructions:
+            medicine.instructions.trim() || null,
+        }));
 
       const {
         error: itemsError,
       } = await supabase
-
         .from("prescription_items")
-
         .insert(itemsToInsert);
 
-
       if (itemsError) {
-
-        console.error(
-          itemsError
-        );
-
+        console.error(itemsError);
 
         await supabase
-
           .from("prescriptions")
-
           .delete()
+          .eq("id", prescription.id);
 
-          .eq(
-            "id",
-            prescription.id
-          );
-
-
-        alert(
-          itemsError.message
-        );
-
+        alert(itemsError.message);
         return;
       }
 
-
-      alert(
-        "Prescription saved successfully"
-      );
-
+      alert("Prescription saved successfully");
 
       router.push(
-        `/dashboard/patients/${patient_id}`
+        `/dashboard/patients/${patientId}`
       );
 
-
     } catch (error: any) {
-
       console.error(error);
 
       alert(
@@ -267,199 +200,79 @@ export default function NewPrescriptionForm() {
       );
 
     } finally {
-
       setSaving(false);
     }
   }
 
-
   return (
-
-    <main
-      className="
-        min-h-screen
-        bg-[#080808]
-        text-white
-        p-6
-        pt-24
-      "
-    >
+    <main className="min-h-screen bg-[#080808] text-white p-6 pt-24">
 
       <DashboardMenu />
 
-
-      <div
-        className="
-          max-w-4xl
-          mx-auto
-        "
-      >
-
+      <div className="max-w-4xl mx-auto">
 
         <button
           onClick={() =>
             router.push(
-              `/dashboard/patients/${patient_id}`
+              `/dashboard/patients/${patientId}`
             )
           }
-          className="
-            text-[#BFA15F]
-            mb-6
-          "
+          className="text-[#BFA15F] mb-6"
         >
-
           ← Back to Patient
-
         </button>
 
-
-        <h1
-          className="
-            text-3xl
-            font-bold
-            text-[#BFA15F]
-            mb-8
-          "
-        >
-
+        <h1 className="text-3xl font-bold text-[#BFA15F] mb-8">
           New Prescription
-
         </h1>
 
+        <div className="bg-[#171717] border border-[#BFA15F]/30 rounded-xl p-6">
 
-        <div
-          className="
-            bg-[#171717]
-            border
-            border-[#BFA15F]/30
-            rounded-xl
-            p-6
-          "
-        >
+          <div className="mb-8">
 
-
-          <div
-            className="
-              mb-8
-            "
-          >
-
-            <label
-              className="
-                block
-                mb-2
-                text-gray-300
-              "
-            >
-
+            <label className="block mb-2 text-gray-300">
               Prescription Notes
-
             </label>
-
 
             <textarea
               value={notes}
               onChange={(e) =>
-                setNotes(
-                  e.target.value
-                )
+                setNotes(e.target.value)
               }
               placeholder="General prescription notes..."
-              className="
-                w-full
-                h-32
-                bg-[#080808]
-                border
-                border-[#BFA15F]/30
-                rounded-xl
-                px-4
-                py-3
-                outline-none
-              "
+              className="w-full h-32 bg-[#080808] border border-[#BFA15F]/30 rounded-xl px-4 py-3 outline-none"
             />
 
           </div>
 
+          <div className="flex justify-between items-center mb-5 gap-4">
 
-          <div
-            className="
-              flex
-              justify-between
-              items-center
-              mb-5
-              gap-4
-            "
-          >
-
-            <h2
-              className="
-                text-2xl
-                font-bold
-                text-[#D6C08A]
-              "
-            >
-
+            <h2 className="text-2xl font-bold text-[#D6C08A]">
               Medicines
-
             </h2>
-
 
             <button
               onClick={addMedicine}
-              className="
-                bg-[#BFA15F]
-                text-black
-                px-4
-                py-2
-                rounded-xl
-                font-bold
-                whitespace-nowrap
-              "
+              className="bg-[#BFA15F] text-black px-4 py-2 rounded-xl font-bold whitespace-nowrap"
             >
-
               + Add Medicine
-
             </button>
 
           </div>
-
 
           {medicines.map(
             (medicine, index) => (
 
               <div
                 key={index}
-                className="
-                  border
-                  border-[#BFA15F]/30
-                  rounded-xl
-                  p-5
-                  mb-6
-                "
+                className="border border-[#BFA15F]/30 rounded-xl p-5 mb-6"
               >
 
+                <div className="flex justify-between items-center mb-5">
 
-                <div
-                  className="
-                    flex
-                    justify-between
-                    items-center
-                    mb-5
-                  "
-                >
-
-                  <h3
-                    className="
-                      text-xl
-                      font-bold
-                      text-[#D6C08A]
-                    "
-                  >
-
+                  <h3 className="text-xl font-bold text-[#D6C08A]">
                     Medicine {index + 1}
-
                   </h3>
-
 
                   {medicines.length > 1 && (
 
@@ -467,27 +280,16 @@ export default function NewPrescriptionForm() {
                       onClick={() =>
                         removeMedicine(index)
                       }
-                      className="
-                        text-red-400
-                      "
+                      className="text-red-400"
                     >
-
                       Remove
-
                     </button>
 
                   )}
 
                 </div>
 
-
-                <div
-                  className="
-                    grid
-                    md:grid-cols-2
-                    gap-4
-                  "
-                >
+                <div className="grid md:grid-cols-2 gap-4">
 
                   <input
                     value={
@@ -501,23 +303,11 @@ export default function NewPrescriptionForm() {
                       )
                     }
                     placeholder="Medicine Name *"
-                    className="
-                      w-full
-                      bg-[#080808]
-                      border
-                      border-[#BFA15F]/30
-                      rounded-xl
-                      px-4
-                      py-3
-                      outline-none
-                    "
+                    className="bg-[#080808] border border-[#BFA15F]/30 rounded-xl px-4 py-3 outline-none"
                   />
 
-
                   <input
-                    value={
-                      medicine.dose
-                    }
+                    value={medicine.dose}
                     onChange={(e) =>
                       updateMedicine(
                         index,
@@ -526,23 +316,11 @@ export default function NewPrescriptionForm() {
                       )
                     }
                     placeholder="Dose (e.g. 500 mg)"
-                    className="
-                      w-full
-                      bg-[#080808]
-                      border
-                      border-[#BFA15F]/30
-                      rounded-xl
-                      px-4
-                      py-3
-                      outline-none
-                    "
+                    className="bg-[#080808] border border-[#BFA15F]/30 rounded-xl px-4 py-3 outline-none"
                   />
 
-
                   <input
-                    value={
-                      medicine.frequency
-                    }
+                    value={medicine.frequency}
                     onChange={(e) =>
                       updateMedicine(
                         index,
@@ -551,23 +329,11 @@ export default function NewPrescriptionForm() {
                       )
                     }
                     placeholder="Frequency (e.g. 2 times daily)"
-                    className="
-                      w-full
-                      bg-[#080808]
-                      border
-                      border-[#BFA15F]/30
-                      rounded-xl
-                      px-4
-                      py-3
-                      outline-none
-                    "
+                    className="bg-[#080808] border border-[#BFA15F]/30 rounded-xl px-4 py-3 outline-none"
                   />
 
-
                   <input
-                    value={
-                      medicine.duration
-                    }
+                    value={medicine.duration}
                     onChange={(e) =>
                       updateMedicine(
                         index,
@@ -576,25 +342,13 @@ export default function NewPrescriptionForm() {
                       )
                     }
                     placeholder="Duration (e.g. 7 days)"
-                    className="
-                      w-full
-                      bg-[#080808]
-                      border
-                      border-[#BFA15F]/30
-                      rounded-xl
-                      px-4
-                      py-3
-                      outline-none
-                    "
+                    className="bg-[#080808] border border-[#BFA15F]/30 rounded-xl px-4 py-3 outline-none"
                   />
 
                 </div>
 
-
                 <textarea
-                  value={
-                    medicine.instructions
-                  }
+                  value={medicine.instructions}
                   onChange={(e) =>
                     updateMedicine(
                       index,
@@ -603,18 +357,7 @@ export default function NewPrescriptionForm() {
                     )
                   }
                   placeholder="Instructions..."
-                  className="
-                    w-full
-                    h-28
-                    mt-4
-                    bg-[#080808]
-                    border
-                    border-[#BFA15F]/30
-                    rounded-xl
-                    px-4
-                    py-3
-                    outline-none
-                  "
+                  className="w-full h-28 mt-4 bg-[#080808] border border-[#BFA15F]/30 rounded-xl px-4 py-3 outline-none"
                 />
 
               </div>
@@ -622,34 +365,20 @@ export default function NewPrescriptionForm() {
             )
           )}
 
-
           <button
             onClick={savePrescription}
             disabled={saving}
-            className="
-              w-full
-              bg-[#BFA15F]
-              text-black
-              py-3
-              rounded-xl
-              font-bold
-              disabled:opacity-50
-            "
+            className="w-full bg-[#BFA15F] text-black py-3 rounded-xl font-bold disabled:opacity-50"
           >
-
             {saving
               ? "Saving..."
-              : "Save Prescription"
-            }
-
+              : "Save Prescription"}
           </button>
-
 
         </div>
 
       </div>
 
     </main>
-
   );
 }
