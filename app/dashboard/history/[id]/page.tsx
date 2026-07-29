@@ -16,10 +16,8 @@ export default function MedicalHistoryDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  const [category, setCategory] = useState("");
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [date, setDate] = useState("");
+ const [note, setNote] = useState("");
+const [date, setDate] = useState("");
 
   useEffect(() => {
     if (id) {
@@ -45,30 +43,26 @@ export default function MedicalHistoryDetailsPage() {
 
     setHistory(data);
 
-    setCategory(data.category || "");
-    setTitle(data.title || "");
-    setDescription(data.description || "");
+    setNote(data.note || "");
     setDate(data.date || "");
 
     setLoading(false);
   }
 
   async function saveChanges() {
-    if (!title.trim()) {
-      alert("Please enter a title");
-      return;
-    }
+    if (!note.trim()) {
+  alert("Please enter medical history");
+  return;
+}
 
     setSaving(true);
 
     const { error } = await supabase
       .from("medical_history")
       .update({
-        category: category || null,
-        title,
-        description: description || null,
-        date: date || null,
-      })
+  note: note.trim(),
+  date: date || null,
+})
       .eq("id", id);
 
     if (error) {
@@ -165,44 +159,38 @@ export default function MedicalHistoryDetailsPage() {
 
         <div className="bg-[#171717] border border-[#BFA15F]/30 rounded-xl p-6 space-y-5">
 
-          <div>
-            <label className="block mb-2 text-gray-300">
-              Category
-            </label>
+ <div>
+  <label className="block mb-2 text-gray-300">
+    Medical History *
+  </label>
 
-            <input
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              placeholder="Category"
-              className="w-full bg-[#080808] border border-[#BFA15F]/30 rounded-xl px-4 py-3 outline-none"
-            />
-          </div>
-
-          <div>
-            <label className="block mb-2 text-gray-300">
-              Title *
-            </label>
-
-            <input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Title"
-              className="w-full bg-[#080808] border border-[#BFA15F]/30 rounded-xl px-4 py-3 outline-none"
-            />
-          </div>
-
-          <div>
-            <label className="block mb-2 text-gray-300">
-              Description
-            </label>
-
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Description"
-              className="w-full h-36 bg-[#080808] border border-[#BFA15F]/30 rounded-xl px-4 py-3 outline-none"
-            />
-          </div>
+  <textarea
+    value={note}
+    onChange={(e) =>
+      setNote(e.target.value)
+    }
+    placeholder="
+      Write medical history...
+      
+      Example:
+      Patient has asthma since childhood.
+      Allergic to penicillin.
+    "
+    className="
+      w-full
+      h-40
+      bg-[#080808]
+      border
+      border-[#BFA15F]/30
+      rounded-xl
+      px-4
+      py-3
+      outline-none
+      resize-none
+      focus:border-[#BFA15F]
+    "
+  />
+</div>
 
           <div>
             <label className="block mb-2 text-gray-300">

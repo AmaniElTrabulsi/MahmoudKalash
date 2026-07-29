@@ -27,14 +27,7 @@ function NewMedicalHistoryForm() {
     searchParams.get("patient_id");
 
 
-  const [category, setCategory] =
-    useState("");
-
-  const [title, setTitle] =
-    useState("");
-
-  const [description, setDescription] =
-    useState("");
+const [note, setNote] = useState("");
 
   const [date, setDate] =
     useState("");
@@ -56,16 +49,7 @@ function NewMedicalHistoryForm() {
     }
 
 
-    if (!title.trim()) {
-
-      alert(
-        "Please enter a title"
-      );
-
-      return;
-
-    }
-
+  
 
     setSaving(true);
 
@@ -77,25 +61,14 @@ function NewMedicalHistoryForm() {
       .from("medical_history")
 
       .insert({
+  patient_id,
 
-        patient_id,
+  note:
+    note.trim(),
 
-        category:
-          category.trim() ||
-          null,
-
-        title:
-          title.trim(),
-
-        description:
-          description.trim() ||
-          null,
-
-        date:
-          date ||
-          null,
-
-      });
+  date:
+    date || null,
+});
 
 
     if (error) {
@@ -215,117 +188,40 @@ function NewMedicalHistoryForm() {
               "
             >
 
-              Category
+              Medical History
 
             </label>
 
 
-            <input
-              value={category}
-              onChange={(e) =>
-                setCategory(
-                  e.target.value
-                )
-              }
-              placeholder="
-                Example: Allergy, Surgery, Chronic Disease
-              "
-              className="
-                w-full
-                bg-[#080808]
-                border
-                border-[#BFA15F]/30
-                rounded-xl
-                px-4
-                py-3
-                outline-none
-                focus:border-[#BFA15F]
-              "
-            />
+       <textarea
+  value={note}
+  onChange={(e) =>
+    setNote(
+      e.target.value
+    )
+  }
+  placeholder="
+    Write medical history...
 
-          </div>
-
-
-          <div>
-
-            <label
-              className="
-                block
-                mb-2
-                text-gray-300
-              "
-            >
-
-              Title *
-
-            </label>
-
-
-            <input
-              value={title}
-              onChange={(e) =>
-                setTitle(
-                  e.target.value
-                )
-              }
-              placeholder="
-                Example: Appendectomy
-              "
-              className="
-                w-full
-                bg-[#080808]
-                border
-                border-[#BFA15F]/30
-                rounded-xl
-                px-4
-                py-3
-                outline-none
-                focus:border-[#BFA15F]
-              "
-            />
-
-          </div>
-
-
-          <div>
-
-            <label
-              className="
-                block
-                mb-2
-                text-gray-300
-              "
-            >
-
-              Description
-
-            </label>
-
-
-            <textarea
-              value={description}
-              onChange={(e) =>
-                setDescription(
-                  e.target.value
-                )
-              }
-              placeholder="
-                Describe the medical history...
-              "
-              className="
-                w-full
-                h-36
-                bg-[#080808]
-                border
-                border-[#BFA15F]/30
-                rounded-xl
-                px-4
-                py-3
-                outline-none
-                resize-none
-                focus:border-[#BFA15F]
-              "
-            />
+    Example:
+    Patient has diabetes since 2018.
+    Takes Metformin daily.
+    Allergic to penicillin.
+  "
+  className="
+    w-full
+    h-40
+    bg-[#080808]
+    border
+    border-[#BFA15F]/30
+    rounded-xl
+    px-4
+    py-3
+    outline-none
+    resize-none
+    focus:border-[#BFA15F]
+  "
+/>
 
           </div>
 
