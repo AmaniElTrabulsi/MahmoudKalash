@@ -45,6 +45,42 @@ export default function PatientsPage() {
     setPatients(data || []);
     setLoading(false);
   }
+  async function deletePatient(
+  patientId: string,
+  patientName: string
+) {
+  const confirmed = confirm(
+    `Are you sure you want to delete ${patientName}?`
+  );
+
+  if (!confirmed) {
+    return;
+  }
+
+  const { error } = await supabase
+    .from("patients")
+    .delete()
+    .eq("id", patientId);
+
+  if (error) {
+    console.error(
+      "Delete patient error:",
+      error
+    );
+
+    alert(error.message);
+
+    return;
+  }
+
+  // remove from UI immediately
+  setPatients((current) =>
+    current.filter(
+      (patient) =>
+        patient.id !== patientId
+    )
+  );
+}
 
   const filteredPatients = patients.filter(
     (patient) => {
@@ -258,10 +294,14 @@ export default function PatientsPage() {
                     </div>
 
                     <div
-                      className="
-                      text-right
-                      "
-                    >
+  className="
+  text-right
+  flex
+  flex-col
+  items-end
+  gap-3
+  "
+>
                       <p
                         className="
                         text-gray-400
@@ -284,6 +324,28 @@ export default function PatientsPage() {
                         {patient.medical_coverage ||
                           "No coverage"}
                       </p>
+                      <button
+  onClick={(e) => {
+    e.stopPropagation();
+
+    deletePatient(
+      patient.id,
+      `${patient.first_name} ${patient.last_name}`
+    );
+  }}
+  className="
+  bg-red-600
+  text-white
+  px-4
+  py-2
+  rounded-lg
+  text-sm
+  font-bold
+  hover:bg-red-700
+  "
+>
+  Delete
+</button>
                     </div>
                   </div>
                 </div>
